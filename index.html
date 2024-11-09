@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+        }
+        h1 {
+            text-align: center;
+            color: #4a4a4a;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a4a4a;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        #crypto-price {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: rgba(76, 175, 80, 0.1);
+            border-radius: 5px;
+        }
+        #alert-message {
+            color: #f44336;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(244, 67, 54, 0.1);
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Crypto Tracker</h1>
+        <label for="crypto-select">Select a cryptocurrency:</label>
+        <select id="crypto-select">
+            <option value="">Choose a cryptocurrency</option>
+            <option value="bitcoin">Bitcoin</option>
+            <option value="ethereum">Ethereum</option>
+            <option value="dogecoin">Dogecoin</option>
+        </select>
+        
+        <div id="crypto-price"></div>
+        
+        <label for="alert-price">Set alert price (USD):</label>
+        <input type="number" id="alert-price" placeholder="Enter alert price">
+        
+        <div id="alert-message"></div>
+    </div>
+
+    <script>
+        const cryptoSelect = document.getElementById('crypto-select');
+        const cryptoPrice = document.getElementById('crypto-price');
+        const alertPrice = document.getElementById('alert-price');
+        const alertMessage = document.getElementById('alert-message');
+
+        let currentPrice = 0;
+        let selectedCrypto = '';
+
+        cryptoSelect.addEventListener('change', fetchPrice);
+        alertPrice.addEventListener('input', checkAlertPrice);
+
+        function fetchPrice() {
+            selectedCrypto = cryptoSelect.value;
+            if (selectedCrypto) {
+                fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${selectedCrypto}&vs_currencies=usd`)
+                    .then(response => response.json())
+                    .then(data => {
+                        currentPrice = data[selectedCrypto].usd;
+                        cryptoPrice.textContent = `Current price: $${currentPrice.toFixed(2)}`;
+                        cryptoPrice.style.display = 'block';
+                        checkAlertPrice();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching price:', error);
+                        cryptoPrice.textContent = 'Error fetching price';
+                        cryptoPrice.style.display = 'block';
+                    });
+            } else {
+                cryptoPrice.style.display = 'none';
+                alertMessage.style.display = 'none';
+            }
+        }
+
+        function checkAlertPrice() {
+            const alertValue = parseFloat(alertPrice.value);
+            if (alertValue && currentPrice >= alertValue) {
+                alertMessage.textContent = `Alert: ${selectedCrypto.charAt(0).toUpperCase() + selectedCrypto.slice(1)} has reached or exceeded $${alertValue}!`;
+                alertMessage.style.display = 'block';
+            } else {
+                alertMessage.style.display = 'none';
+            }
+        }
+
+        // Fetch price every minute
+        setInterval(fetchPrice, 60000);
+    </script>
+</body>
+</html>
